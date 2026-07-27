@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Real-time weather monitoring and AI-powered prediction for any city in the world.">
+    <title>WeatherIQ — Monitor &amp; Predict</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- ── Header ───────────────────────────────────────────────────────── -->
+    <div class="header">
+        <div class="badge">🌍 Live Weather Data</div>
+        <h1>Weather Monitoring &amp; Prediction</h1>
+        <p class="subtitle">Real-time data powered by OpenWeatherMap · Instant smart predictions</p>
+    </div>
+
+
+    <!-- ── Search Form ───────────────────────────────────────────────────── -->
+    <div class="form-card">
+        <form method="POST" id="weatherForm">
+
+            <div class="input-group">
+                <label for="city1">Primary City</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">🏙</span>
+                    <input type="text" id="city1" name="city1"
+                           placeholder="e.g. Mumbai, London, New York"
+                           value="{{ request.form.get('city1', '') }}"
+                           autocomplete="off">
+                </div>
+            </div>
+
+            <div class="divider">compare with</div>
+
+            <div class="input-group">
+                <label for="city2">Second City <span style="opacity:0.5;font-weight:400">(optional)</span></label>
+                <div class="input-wrapper">
+                    <span class="input-icon">📍</span>
+                    <input type="text" id="city2" name="city2"
+                           placeholder="e.g. Delhi, Paris, Tokyo"
+                           value="{{ request.form.get('city2', '') }}"
+                           autocomplete="off">
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submitBtn">
+                <span>⚡ Get Weather &amp; Prediction</span>
+            </button>
+
+        </form>
+    </div>
+
+
+    <!-- ── Error ─────────────────────────────────────────────────────────── -->
+    {% if error %}
+    <div class="error-box">
+        <span class="error-icon">⚠️</span>
+        <span>{{ error }}</span>
+    </div>
+    {% endif %}
+
+
+    <!-- ── Weather Cards ─────────────────────────────────────────────────── -->
+    {% if weather1 or weather2 %}
+    <div class="cards-grid">
+
+        <!-- City 1 -->
+        {% if weather1 %}
+        <div class="weather-card">
+
+            <div class="card-header">
+                <span class="city-pin">📍</span>
+                <h2>{{ weather1.city }}</h2>
+                <span class="condition-badge">{{ weather1.condition }}</span>
+            </div>
+
+            <div class="stats-grid">
+
+                <!-- Temperature (full width) -->
+                <div class="stat-item full-width">
+                    <div>
+                        <span class="stat-icon">🌡</span>
+                        <div class="stat-label">Temperature</div>
+                    </div>
+                    <div style="display:flex;align-items:flex-end;gap:4px;">
+                        <span class="stat-value">{{ weather1.temperature }}</span>
+                        <span class="temp-unit">°C</span>
+                    </div>
+                </div>
+
+                <div class="stat-item">
+                    <span class="stat-icon">💧</span>
+                    <div class="stat-label">Humidity</div>
+                    <div class="stat-value">{{ weather1.humidity }}<span style="font-size:13px;opacity:0.6">%</span></div>
+                </div>
+
+                <div class="stat-item">
+                    <span class="stat-icon">🌬</span>
+                    <div class="stat-label">Wind Speed</div>
+                    <div class="stat-value">{{ weather1.wind }}<span style="font-size:13px;opacity:0.6"> m/s</span></div>
+                </div>
+
+                <div class="stat-item">
+                    <span class="stat-icon">📈</span>
+                    <div class="stat-label">Pressure</div>
+                    <div class="stat-value">{{ weather1.pressure }}<span style="font-size:13px;opacity:0.6"> hPa</span></div>
+                </div>
+
+            </div>
+
+            {% if prediction1 %}
+            <div class="prediction-card level-{{ prediction1.level }}">
+                <div class="pred-top">
+                    <span class="pred-tag">🔮 Prediction</span>
+                </div>
+                <div class="prediction-label">{{ prediction1.label }}</div>
+                <div class="prediction-detail">{{ prediction1.detail }}</div>
+            </div>
+            {% endif %}
+
+        </div>
+        {% endif %}
+
+
+        <!-- City 2 -->
+        {% if weather2 %}
+        <div class="weather-card">
+
+            <div class="card-header">
+                <span class="city-pin">📍</span>
+                <h2>{{ weather2.city }}</h2>
+                <span class="condition-badge">{{ weather2.condition }}</span>
+            </div>
+
+            <div class="stats-grid">
+
+                <!-- Temperature (full width) -->
+                <div class="stat-item full-width">
+                    <div>
+                        <span class="stat-icon">🌡</span>
+                        <div class="stat-label">Temperature</div>
+                    </div>
+                    <div style="display:flex;align-items:flex-end;gap:4px;">
+                        <span class="stat-value">{{ weather2.temperature }}</span>
+                        <span class="temp-unit">°C</span>
+                    </div>
+                </div>
+
+                <div class="stat-item">
+                    <span class="stat-icon">💧</span>
+                    <div class="stat-label">Humidity</div>
+                    <div class="stat-value">{{ weather2.humidity }}<span style="font-size:13px;opacity:0.6">%</span></div>
+                </div>
+
+                <div class="stat-item">
+                    <span class="stat-icon">🌬</span>
+                    <div class="stat-label">Wind Speed</div>
+                    <div class="stat-value">{{ weather2.wind }}<span style="font-size:13px;opacity:0.6"> m/s</span></div>
+                </div>
+
+                <div class="stat-item">
+                    <span class="stat-icon">📈</span>
+                    <div class="stat-label">Pressure</div>
+                    <div class="stat-value">{{ weather2.pressure }}<span style="font-size:13px;opacity:0.6"> hPa</span></div>
+                </div>
+
+            </div>
+
+            {% if prediction2 %}
+            <div class="prediction-card level-{{ prediction2.level }}">
+                <div class="pred-top">
+                    <span class="pred-tag">🔮 Prediction</span>
+                </div>
+                <div class="prediction-label">{{ prediction2.label }}</div>
+                <div class="prediction-detail">{{ prediction2.detail }}</div>
+            </div>
+            {% endif %}
+
+        </div>
+        {% endif %}
+
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Loading button feedback -->
+<script>
+    document.getElementById('weatherForm').addEventListener('submit', function() {
+        const btn = document.getElementById('submitBtn');
+        btn.innerHTML = '<span>⏳ Fetching weather...</span>';
+        btn.style.opacity = '0.75';
+        btn.disabled = true;
+    });
+</script>
+
+</body>
+</html>
