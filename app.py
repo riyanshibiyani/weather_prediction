@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request
 import requests
+from datetime import datetime, timezone, timedelta
 
 
 app = Flask(__name__)
@@ -18,13 +19,24 @@ def get_weather(city):
     print(data)
 
     if response.status_code == 200:
+        # City's UTC offset in seconds — use it to show local sunrise/sunset
+        tz_offset = data.get("timezone", 0)
+        city_tz   = timezone(timedelta(seconds=tz_offset))
+
+        def unix_to_local(ts):
+            """Convert a Unix timestamp to HH:MM in the city's local timezone."""
+            return datetime.fromtimestamp(ts, tz=city_tz).strftime("%I:%M %p")
+
         weather = {
-            "city": data["name"],
+            "city":        data["name"],
+            "country":     data["sys"].get("country", ""),
             "temperature": data["main"]["temp"],
-            "humidity": data["main"]["humidity"],
-            "pressure": data["main"]["pressure"],
-            "wind": data["wind"]["speed"],
-            "condition": data["weather"][0]["main"]
+            "humidity":    data["main"]["humidity"],
+            "pressure":    data["main"]["pressure"],
+            "wind":        data["wind"]["speed"],
+            "condition":   data["weather"][0]["main"],
+            "sunrise":     unix_to_local(data["sys"]["sunrise"]),
+            "sunset":      unix_to_local(data["sys"]["sunset"]),
         }
         return weather
     else:
