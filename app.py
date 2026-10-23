@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, render_template, request
 import requests
 from datetime import datetime, timezone, timedelta
@@ -5,8 +7,7 @@ from datetime import datetime, timezone, timedelta
 
 app = Flask(__name__)
 
-# Replace with your OpenWeatherMap API Key
-API_KEY = "5d28eb458ce001c2314db81bb68980e3"
+API_KEY = os.environ.get("OPENWEATHERMAP_API_KEY", "")
 
 
 def get_weather(city):
