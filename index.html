@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Real-time weather monitoring and AI-powered prediction for any city in the world.">
+    <title>WeatherIQ — Monitor &amp; Predict</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<!-- ── Animated Particle Canvas ─────────────────────────────────────────── -->
+<canvas id="bg-canvas"></canvas>
+
+<div class="container">
+
+    <!-- ── Header ───────────────────────────────────────────────────────── -->
+    <div class="header">
+        <div class="badge">🌍 Live Weather Data</div>
+        <h1>Weather Monitoring &amp; Prediction</h1>
+        <p class="subtitle">Real-time data powered by OpenWeatherMap · Instant smart predictions</p>
+    </div>
+
+
+    <!-- ── Search Form ───────────────────────────────────────────────────── -->
+    <div class="form-card">
+        <form method="POST" id="weatherForm">
+
+            <div class="input-group">
+                <label for="city1">Primary City</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">🏙</span>
+                    <input type="text" id="city1" name="city1"
+                           placeholder="e.g. Mumbai, London, New York"
+                           value="{{ request.form.get('city1', '') }}"
+                           autocomplete="off">
+                </div>
+            </div>
+
+            <div class="divider">compare with</div>
+
+            <div class="input-group">
+                <label for="city2">Second City <span style="opacity:0.5;font-weight:400">(optional)</span></label>
+                <div class="input-wrapper">
+                    <span class="input-icon">📍</span>
+                    <input type="text" id="city2" name="city2"
+                           placeholder="e.g. Delhi, Paris, Tokyo"
+                           value="{{ request.form.get('city2', '') }}"
+                           autocomplete="off">
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submitBtn">
+                <span>⚡ Get Weather &amp; Prediction</span>
+            </button>
+
+        </form>
+    </div>
+
+
+    <!-- ── Error ─────────────────────────────────────────────────────────── -->
+    {% if error %}
+    <div class="error-box">
+        <span class="error-icon">⚠️</span>
+        <span>{{ error }}</span>
+    </div>
+    {% endif %}
+
+
+    <!-- ── Weather Cards ─────────────────────────────────────────────────── -->
+    {% if weather1 or weather2 %}
+    <div class="cards-grid">
+
+        <!-- City 1 -->
+        {% if weather1 %}
+        <div class="weather-card">
+
+            <div class="card-header">
+                <span class="city-pin">📍</span>
+                <div>
+                    <h2>{{ weather1.city }}</h2>
+                    {% if weather1.country %}<span class="country-tag">{{ weather1.country }}</span>{% endif %}
+                </div>
+                <span class="condition-badge">{{ weather1.condition }}</span>
+            </div>
+
+            <div class="stats-grid">
+
+                <!-- Temperature (full width) -->
+                <div class="stat-item full-width">
+                    <div>
+                        <span class="stat-icon">🌡</span>
+                        <div class="stat-label">Temperature</div>
+                    </div>
+                    <div style="display:flex;align-items:flex-end;gap:4px;">
+                        <span class="stat-value">{{ weather1.temperature }}</span>
+                        <span class="temp-unit">°C</span>
+                    </div>
+                </div>
+
+                <div class="stat-item">
+                    <span class="stat-icon">💧</span>
+                    <div class="stat-label">Humidity</div>
+                    <div class="stat-value">{{ weather1.humidity }}<span style="font-size:13px;opacity:0.6">%</span></div>
+                </div>
+
+                <div class="stat-item">
+                    <span class="stat-icon">🌬</span>
+                    <div class="stat-label">Wind Speed</div>
+                    <div class="stat-value">{{ weather1.wind }}<span style="font-size:13px;opacity:0.6"> m/s</span></div>
+                </div>
+
+                <div class="stat-item">
+                    <span class="stat-icon">📈</span>
+                    <div class="stat-label">Pressure</div>
+                    <div class="stat-value">{{ weather1.pressure }}<span style="font-size:13px;opacity:0.6"> hPa</span></div>
+                </div>
+
+            </div>
+
+            <!-- Sunrise / Sunset -->
+            <div class="sun-row">
+                <div class="sun-item">
+                    <div class="sun-icon rise">🌅</div>
+                    <div class="sun-label">Sunrise</div>
+                    <div class="sun-time">{{ weather1.sunrise }}</div>
+                </div>
+                <div class="sun-arc">
+                    <svg viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 55 Q60 0 110 55" stroke="url(#sunGrad1)" stroke-width="2.5"
+                              stroke-linecap="round" stroke-dasharray="5 3" fill="none"/>
+                        <defs>
+                            <linearGradient id="sunGrad1" x1="0" y1="0" x2="1" y2="0">
+                                <stop offset="0%"  stop-color="#f97316"/>
+                                <stop offset="100%" stop-color="#fbbf24"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="sun-dot">☀</div>
+                </div>
+                <div class="sun-item">
+                    <div class="sun-icon set">🌇</div>
+                    <div class="sun-label">Sunset</div>
+                    <div class="sun-time">{{ weather1.sunset }}</div>
+                </div>
+            </div>
+
+            {% if prediction1 %}
+            <div class="prediction-card level-{{ prediction1.level }}">
+                <div class="pred-top">
+                    <span class="pred-tag">🔮 Prediction</span>
+                </div>
+                <div class="prediction-label">{{ prediction1.label }}</div>
+                <div class="prediction-detail">{{ prediction1.detail }}</div>
+            </div>
+            {% endif %}
+
+        </div>
+        {% endif %}
+
+
+        <!-- City 2 -->
+        {% if weather2 %}
+        <div class="weather-card">
+
+            <div class="card-header">
+                <span class="city-pin">📍</span>
+                <div>
+                    <h2>{{ weather2.city }}</h2>
+                    {% if weather2.country %}<span class="country-tag">{{ weather2.country }}</span>{% endif %}
+                </div>
+                <span class="condition-badge">{{ weather2.condition }}</span>
+            </div>
+
+            <div class="stats-grid">
+
+                <!-- Temperature (full width) -->
+                <div class="stat-item full-width">
+                    <div>
+                        <span class="stat-icon">🌡</span>
+                        <div class="stat-label">Temperature</div>
+                    </div>
+                    <div style="display:flex;align-items:flex-end;gap:4px;">
+                        <span class="stat-value">{{ weather2.temperature }}</span>
+                        <span class="temp-unit">°C</span>
+                    </div>
+                </div>
+
+                <div class="stat-item">
+                    <span class="stat-icon">💧</span>
+                    <div class="stat-label">Humidity</div>
+                    <div class="stat-value">{{ weather2.humidity }}<span style="font-size:13px;opacity:0.6">%</span></div>
+                </div>
+
+                <div class="stat-item">
+                    <span class="stat-icon">🌬</span>
+                    <div class="stat-label">Wind Speed</div>
+                    <div class="stat-value">{{ weather2.wind }}<span style="font-size:13px;opacity:0.6"> m/s</span></div>
+                </div>
+
+                <div class="stat-item">
+                    <span class="stat-icon">📈</span>
+                    <div class="stat-label">Pressure</div>
+                    <div class="stat-value">{{ weather2.pressure }}<span style="font-size:13px;opacity:0.6"> hPa</span></div>
+                </div>
+
+            </div>
+
+            <!-- Sunrise / Sunset -->
+            <div class="sun-row">
+                <div class="sun-item">
+                    <div class="sun-icon rise">🌅</div>
+                    <div class="sun-label">Sunrise</div>
+                    <div class="sun-time">{{ weather2.sunrise }}</div>
+                </div>
+                <div class="sun-arc">
+                    <svg viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 55 Q60 0 110 55" stroke="url(#sunGrad2)" stroke-width="2.5"
+                              stroke-linecap="round" stroke-dasharray="5 3" fill="none"/>
+                        <defs>
+                            <linearGradient id="sunGrad2" x1="0" y1="0" x2="1" y2="0">
+                                <stop offset="0%"  stop-color="#f97316"/>
+                                <stop offset="100%" stop-color="#fbbf24"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="sun-dot">☀</div>
+                </div>
+                <div class="sun-item">
+                    <div class="sun-icon set">🌇</div>
+                    <div class="sun-label">Sunset</div>
+                    <div class="sun-time">{{ weather2.sunset }}</div>
+                </div>
+            </div>
+
+            {% if prediction2 %}
+            <div class="prediction-card level-{{ prediction2.level }}">
+                <div class="pred-top">
+                    <span class="pred-tag">🔮 Prediction</span>
+                </div>
+                <div class="prediction-label">{{ prediction2.label }}</div>
+                <div class="prediction-detail">{{ prediction2.detail }}</div>
+            </div>
+            {% endif %}
+
+        </div>
+        {% endif %}
+
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Loading button feedback -->
+<script>
+    document.getElementById('weatherForm').addEventListener('submit', function() {
+        const btn = document.getElementById('submitBtn');
+        btn.innerHTML = '<span>⏳ Fetching weather...</span>';
+        btn.style.opacity = '0.75';
+        btn.disabled = true;
+    });
+</script>
+
+<!-- ── Particle Background ─────────────────────────────────────────────── -->
+<script>
+(function () {
+    const canvas = document.getElementById('bg-canvas');
+    const ctx    = canvas.getContext('2d');
+
+    // Colour palette — purple / indigo / teal / blue
+    const COLORS = [
+        'rgba(129,140,248,',   // indigo
+        'rgba(167,139,250,',   // violet
+        'rgba(52,211,153,',    // emerald
+        'rgba(56,189,248,',    // sky
+        'rgba(251,191,36,',    // amber (occasional warm dot)
+        'rgba(255,255,255,',   // white
+    ];
+
+    const PARTICLE_COUNT = 130;
+    let W, H, particles = [];
+
+    function resize() {
+        W = canvas.width  = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+    }
+
+    function rand(min, max) { return Math.random() * (max - min) + min; }
+
+    class Particle {
+        constructor() { this.reset(true); }
+
+        reset(initial = false) {
+            this.x     = rand(0, W);
+            this.y     = initial ? rand(0, H) : H + 10;
+            this.r     = rand(0.6, 2.8);
+            this.color = COLORS[Math.floor(Math.random() * COLORS.length)];
+            this.alpha = rand(0.15, 0.75);
+            this.alphaDir = rand(0.002, 0.008);
+            this.speed = rand(0.15, 0.55);
+            this.drift = rand(-0.25, 0.25);  // horizontal drift
+            this.pulse = rand(0, Math.PI * 2); // phase offset for twinkle
+        }
+
+        update() {
+            this.y    -= this.speed;
+            this.x    += this.drift;
+            this.pulse += 0.03;
+
+            // Twinkle
+            this.alpha = 0.3 + Math.sin(this.pulse) * 0.35;
+
+            // Wrap horizontally
+            if (this.x < -5)  this.x = W + 5;
+            if (this.x > W+5) this.x = -5;
+
+            // Recycle when off top
+            if (this.y < -10) this.reset();
+        }
+
+        draw() {
+            // Soft glow
+            const grd = ctx.createRadialGradient(
+                this.x, this.y, 0,
+                this.x, this.y, this.r * 4
+            );
+            grd.addColorStop(0,   this.color + this.alpha + ')');
+            grd.addColorStop(0.4, this.color + (this.alpha * 0.4) + ')');
+            grd.addColorStop(1,   this.color + '0)');
+
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.r * 4, 0, Math.PI * 2);
+            ctx.fillStyle = grd;
+            ctx.fill();
+
+            // Crisp centre dot
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+            ctx.fillStyle = this.color + Math.min(this.alpha + 0.2, 1) + ')';
+            ctx.fill();
+        }
+    }
+
+    function init() {
+        resize();
+        particles = Array.from({ length: PARTICLE_COUNT }, () => new Particle());
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, W, H);
+        particles.forEach(p => { p.update(); p.draw(); });
+        requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('resize', () => { resize(); });
+    init();
+    animate();
+})();
+</script>
+
+</body>
+</html>
